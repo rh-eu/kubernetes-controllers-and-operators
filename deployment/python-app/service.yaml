@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+   name: validation
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+  labels:
+    app: app
+  namespace: validation
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: app
+      image: mifomm/app
+      imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mifomm
+  namespace: validation
+spec:
+  selector:
+    app: app
+  ports:
+  - port: 443
+    targetPort: 5000

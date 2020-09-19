@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: validation-webhook
+  namespace: validation
+  labels:
+    app: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+      - name: server
+        image: mifomm/server:latest
+        resources:
+          requests:
+            cpu: 25m
+            memory: 263M
+          limits:
+            cpu: 25m
+            memory: 263M        
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8443
+          name: webhook-api

@@ -1,0 +1,25 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook
+  namespace: validation
+webhooks:
+  - name: mifomm.validation.svc
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions: ["v1","v1beta1"]
+    rules:
+      - apiGroups: ["apps", ""]
+        resources:
+          - "deployments"
+          - "pods"
+        apiVersions:
+          - "*"
+        operations:
+          - CREATE
+    clientConfig:
+      service:
+        name: mifomm
+        namespace: validation
+        path: /validate/
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURDVENDQWZHZ0F3SUJBZ0lVQUlSbFhXT0hlTjdQeGpYT1VjTkRtSDFFNzJnd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0ZERVNNQkFHQTFVRUF3d0pUV2xHYjAxTklFTkJNQjRYRFRJd01Ea3hNekEyTlRZME5Wb1hEVEl3TVRBeApNekEyTlRZME5Wb3dGREVTTUJBR0ExVUVBd3dKVFdsR2IwMU5JRU5CTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGCkFBT0NBUThBTUlJQkNnS0NBUUVBdjBvMWhqQ202UGQxZ0RjVXNQRlo5cllpOEI0VUVzMHNwSDRFU1hiYWlRWlcKTVE0NzR5d0JHWFNIT2cwTkRuTGNtRFV4SDVueVh4cnJLVytqcE1wVU5ROEN0TTVNd2F1d2p2K3Rjb2Rvb2ZDKwp0MCt2bTVOZ0RrZnNHdW5tT0V5eVJaRkczRG4xQ051Ym5TLzlMRFdZNFdzZzFiQUFpL3lvRUd6SlZhYmFlVituCmpqRlpqaTdRbEZlMUJOQVB0M3BxY3FyNUs4S2x6VDdTbUJxUWtXeFNhazJoc0l6Q0JzdnJOYW13akJRZUFuZncKYUg0SndSb0hmcmEvcDlOTjB4dnhlOGRQNkhrc29pYzQzNkdFSVN5NXNOUnFBaWpYME1zT3dOTmZUcytMOWZLZwpobERIcFdSQ0V2RDVUMnYwd0hSclRQeUNucVJyVEVDM2NPN01GNG8wNFFJREFRQUJvMU13VVRBZEJnTlZIUTRFCkZnUVU0NVluRWtCY1gxNDJJdTZ5M1ZEa0d5OTQ5Mjh3SHdZRFZSMGpCQmd3Rm9BVTQ1WW5Fa0JjWDE0Mkl1NnkKM1ZEa0d5OTQ5Mjh3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBYVlNdwpGeDBIcE9CVHVZYkpJKytkLzYxUDZiODE4c2t6azJqU3A3N0tKbnFZR01Bb2FwZWJGQ0o4QnhrQkkyOUVHcUdjCkFGVGJocmhidkZtWDRiQUgzNEE1Ry9ORSs2WEY1NWdrOTBjdlFJYklUK2o5ZE1hbFkwRVFMMXBMeFQ0QnFCRkcKNWtYcHlheXptTnFQNWtVYnVIUnNTNis0T1JoZGt1ODRzakJwbkU0ZDZGMUNVN3B4TW9PL0gvdVJvdEpJcVlaRApzZDFOY05HMHNyRmdWdUpDcmRsSmNhU05leE1QZUFvcnpTb1pOcnZ2a3hXNUVJZ0ZUVC9yQVk3clFsZWlrT2VpCi83R2RvZWxubHQyY01ESjBiWkQrZHg4VlFhM1p3T1BwRzltODZlTUdwUHBFVG85N2hBc0l4WkJwamdCcGxJL2QKYVVFb0Vibm9NaFhYOTVhb21nPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=  
