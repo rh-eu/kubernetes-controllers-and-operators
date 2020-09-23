@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: mifomm/adserv2:latest
+        image: mifomm/webhook:latest
         command: ["/server"]
         #env:
         #  - name: HOSTNAME

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: admission-control
+  namespace: validation
   labels:
     app: admission-control
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: admission-control-example
-          image: mifomm/adserv2
+          image: mifomm/webhook:latest
           #command: ["/admissiond"]
           #env:
           #  - name: HOSTNAME
@@ -53,7 +54,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: admission-control-service
+  name: mifomm
+  namespace: validation
 spec:
   selector:
     app: admission-control
