@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  # Create a namespace that we'll match on
+  name: enforce-annotations
+  labels:
+    enforce-annotations: "true"
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: enforce-pod-annotations
+webhooks:
+  - name: enforce-pod-annotations.questionable.services
+    sideEffects: None
+    # "Equivalent" provides insurance against API version upgrades/changes - e.g.
+    # extensions/v1beta1 Ingress -> networking.k8s.io/v1beta1 Ingress
+    # matchPolicy: Equivalent
+    rules:
+      - apiGroups:
+          - "*"
+        apiVersions:
+          - "*"
+        operations:
+          - "CREATE"
+          - "UPDATE"
+        resources:
+          - "pods"
+          - "deployments"
+    namespaceSelector:
+      matchExpressions:
+        # Any Namespace with a label matching the below will have its
+        # annotations validated by this admission controller
+        - key: "enforce-annotations"
+          operator: In
+          values: ["true"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        # This is the hostname our certificate needs in its Subject Alternative
+        # Name array - name.namespace.svc
+        # If the certificate does NOT have this name, TLS validation will fail.
+        name: admission-control-service
+        namespace: default
+        path: "/admission-control/enforce-pod-annotations"
+      # This should be the CA certificate from your Kubernetes cluster
+      # Use the below to generate the certificate in a valid format:
+      # $ kubectl config view --raw --minify --flatten \
+      #   -o jsonpath='{.clusters[].cluster.certificate-authority-data}'
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURDVENDQWZHZ0F3SUJBZ0lVSDVQUldaT2FtRk9GRWFKTnpYVEhISGVNb1hZd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0ZERVNNQkFHQTFVRUF3d0pUV2xHYjAxTklFTkJNQjRYRFRJd01Ea3lNekV4TkRBd09Gb1hEVEl3TVRBeQpNekV4TkRBd09Gb3dGREVTTUJBR0ExVUVBd3dKVFdsR2IwMU5JRU5CTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGCkFBT0NBUThBTUlJQkNnS0NBUUVBekFXcXhOb0J0VTlvbzJNTmlVUm1vMEhTY0pEOWRBREV1dzc5T3lVaUpLbkIKaWpqQXpIT0k4TEh5WHdRTkN2T1ljUDIxN0RKellOREpBZUJVanpRa2FBWjBOd29GZXk4S2MzdVpuMWZCZE5ucQpxQ0ZHTU9XNUdSTUpiVGdEbzRJOW1JRXZPVlFhMUNtNG9uRFlPc05WNzQvNjQ4UXd0UDVodnZNVUIxeFJha1BqCjFKcVN2cWw3RnFPbWcrMGRrTm9xRnc3bUxhSGJtSUxqbGxBM1lieVRIUGtOcjlncUZCWVFNQlVGN3BVa29JdUEKL25hK05XNFBLNzdYcG9mcGs3b05aOUx3TjFxbUwzSDh0bXNRSm94ZmtzWThpV2pNUHBhU1NDKzUzcXQyYjJ6aAozREZPZkNyU2dBNy91T1pBTzY4cytVSEJzQ1VLZk1UN3ozckFPTlBxdlFJREFRQUJvMU13VVRBZEJnTlZIUTRFCkZnUVVsTlVIak4vOUxkSDVHaTd1WHJGekRDOXIrUkF3SHdZRFZSMGpCQmd3Rm9BVWxOVUhqTi85TGRINUdpN3UKWHJGekRDOXIrUkF3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBZ3kxcgpJbUd0ajlsekRlSDZiSzR5R2JReXlmMWVXaVFyQ24vOGE4WFVLZ0FBczhSZ3d1aUoxNjJzUkNjUFg2ejU0ZFU2ClFhTnQzdERKa3k5Y2R1Q3dHdFN5cW1VZWJRYW0wdzE4bWdmRm9kYW9xcmwrTzd1WkhKZytBTE5KT0lURFNsZVkKNjdrQ21SY2tqbzB6Y050dE01T0pXZXkrd2ZCS2V0a3pQZVFmNHRITXoxMEJJdk1EQWM2elVlQzF1SEhOTkRLSApPQUJBejlzUlJ4RjJHb042dkJqTCtHb3BXcDdLVGJMR016UlVtd09rcEhlOTVwdmpJMUE0SWgrYXdOWXVsakYxCkpYSXRhYmlkR0hIRDd5V2x4ZDZJRVJWb3ZLQTJJd1VaOWVNa3lsVUVISDdHN1N3UUZSdU9JSzltQXA2UGU1bTMKbmJObzl0cnlrV2MvMm0vMk1nPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+      # You can alternatively supply a URL to the service, as long as its reachable by the cluster.
+      # url: "https://admission-control-example.questionable.services/admission-control/enforce-pod-annotations"
