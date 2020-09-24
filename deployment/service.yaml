@@ -5,7 +5,7 @@ metadata:
   namespace: validation
 spec:
   selector:
-    app: server
+    app: validation-webhook
   ports:
     - port: 443
       targetPort: webhook-api
