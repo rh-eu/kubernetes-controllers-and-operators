@@ -1,6 +1,7 @@
 #!/bin/bash
 
 KEYDIR="certs"
+mkdir $KEYDIR
 cd $KEYDIR
 
 # CA cert
@@ -13,3 +14,7 @@ openssl req -new -key mifomm.key -subj "/CN=mifomm.validation.svc." \
 # Create .pem versions
 cp mifomm.crt mifommcrt.pem \
     | cp mifomm.key mifommkey.pem
+
+# Generate a single line base64 encoded certificate
+cat ca.crt | base64 | tr -d '\n' > cabase64.crt
+    

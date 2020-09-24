@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: validation-webhook
+  name: admission-control
   namespace: validation
   labels:
-    app: server
+    app: admission-control
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: server
+      app: admission-control
   template:
     metadata:
       labels:
-        app: server
+        app: admission-control
     spec:
       containers:
-      - name: server
-        image: mifomm/server:latest
+      - name: admission-control-example
+        image: mifomm/webhook:latest
         resources:
           requests:
             cpu: 25m

@@ -10,7 +10,7 @@ RUN go build -o server main.go
 
 FROM alpine:3.12
 
-USER nobody:nobody
+#USER nobody:nobody
 COPY ./certs/ ./certs/.
 COPY --from=build /go/src/github.com/rh-eu/kubernetes-controllers-and-operators/server /server
 
