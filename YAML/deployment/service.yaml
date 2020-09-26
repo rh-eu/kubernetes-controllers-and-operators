@@ -5,7 +5,7 @@ metadata:
   namespace: validation
 spec:
   selector:
-    app: admission-control
+    app: validation-webhook
   ports:
     - port: 443
       protocol: TCP
