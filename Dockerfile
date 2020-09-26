@@ -4,6 +4,7 @@ WORKDIR /go/src/github.com/rh-eu/kubernetes-controllers-and-operators
 
 COPY ./certs/ ./certs/.
 COPY go.* ./
+COPY ./pkg ./pkg/.
 COPY main.go .
 
 RUN go build -o server main.go

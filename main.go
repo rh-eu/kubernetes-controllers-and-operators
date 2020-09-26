@@ -12,8 +12,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	admissioncontrol "github.com/elithrar/admission-control"
 	log "github.com/go-kit/kit/log"
+	admissioncontrol "github.com/rh-eu/kubernetes-controllers-and-operators/pkg/admission-control"
 )
 
 type conf struct {
@@ -29,8 +29,8 @@ func main() {
 
 	// Get config
 	conf := &conf{}
-	flag.StringVar(&conf.TLSCertPath, "cert-path", "./certs/mifommcrt.pem", "The path to the PEM-encoded TLS certificate")
-	flag.StringVar(&conf.TLSKeyPath, "key-path", "./certs/mifommkey.pem", "The path to the unencrypted TLS key")
+	flag.StringVar(&conf.TLSCertPath, "cert-path", "./certs/mifomm.validation.svc/cert.pem", "The path to the PEM-encoded TLS certificate")
+	flag.StringVar(&conf.TLSKeyPath, "key-path", "./certs/mifomm.validation.svc/key.pem", "The path to the unencrypted TLS key")
 	flag.BoolVar(&conf.HTTPOnly, "http-only", false, "Only listen on unencrypted HTTP (e.g. for proxied environments)")
 	flag.StringVar(&conf.Port, "port", "8443", "The port to listen on (HTTPS).")
 	flag.StringVar(&conf.Host, "host", "admissiond.questionable.services", "The hostname for the service")
