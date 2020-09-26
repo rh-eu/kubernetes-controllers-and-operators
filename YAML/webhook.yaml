@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  # Create a namespace that we'll match on
+  name: enforce-annotations
+  labels:
+    enforce-annotations: "true"
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation-webhook-demo
+  namespace: validation
+webhooks:
+  - name: mifomm.validation.svc
+    failurePolicy: Fail
+    sideEffects: None
+    #admissionReviewVersions: [ "v1","v1beta1" ]
+    clientConfig:
+      service:
+        name: mifomm
+        namespace: validation       
+        path: "/admission-control/enforce-pod-annotations"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURTekNDQWpPZ0F3SUJBZ0lJSG82SlRWYUVmbm93RFFZSktvWklodmNOQVFFTEJRQXdJREVlTUJ3R0ExVUUKQXhNVmJXbHVhV05oSUhKdmIzUWdZMkVnTVdVNFpUZzVNQ0FYRFRJd01EUXdPREV5TVRreU1Wb1lEekl4TWpBdwpOREE0TVRJeE9USXhXakFnTVI0d0hBWURWUVFERXhWdGFXNXBZMkVnY205dmRDQmpZU0F4WlRobE9Ea3dnZ0VpCk1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRGRkSTcra3pEY3lmdDJEYmhBbzNnSElOUm4KT0JnTHZaQTIxMURPSmJ5ODAvVzMyM0NJMlVJcjVaSmdxdUg0cjFyY3ZQeUFDci9VZEFuUUpxWXh5Ym13YjYwcwpWQmRlcFpXa3dkVi8zdWwyMWhic255M09iM0QyazVXbi9EUlpZZldrc1EyTlJEK2p3bTluYUxzb0RsNTU3TjJJCmIyd2Qwa1NNMmJjaTlJVG5jakljTmpZbjBSck05b1ZQVU9idXFiR1Q1SmliU003SXpZTUNoaWxPcFpTTmM1bmYKSnFaV3FoKytoK08yQnFDb1ZtS0x3eHJaU2hXMTN0T3cwUkNUYnRWaUNPMDJHUW9YazFpUmxlQksyejNLeVpVdgowN3hZNXRYcTc4R1dQR25OTUxTaEYxQTcvWWtiNVl1aUhzcGhjRTJoS2o3YitObGQ4MlEvN0xjUGlXeDNBZ01CCkFBR2pnWVl3Z1lNd0RnWURWUjBQQVFIL0JBUURBZ0tFTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQkJnZ3IKQmdFRkJRY0RBakFTQmdOVkhSTUJBZjhFQ0RBR0FRSC9BZ0VBTUIwR0ExVWREZ1FXQkJSRWd6dnRUUnIweDNzYwptU1hwcU85aWFvbGlCREFmQmdOVkhTTUVHREFXZ0JSRWd6dnRUUnIweDNzY21TWHBxTzlpYW9saUJEQU5CZ2txCmhraUc5dzBCQVFzRkFBT0NBUUVBbVFVUnd2RXVPM0IzajNQL2ZuRDVwdjF6Yk1FR2htaWVXQUs5NFFXdFQxSGgKaWl2V01HYWl6ak4zNjVnQm5JMDlOVk9kTmRHeWVTVUtqUXY1TFZRNGN3UElMSmdPVlpPRExES1d2WHdmaUVGdgpxRVJPR1Uyb3pUOHlxMFBlcWs4R1hTOTBzeEd2NkI4MHJXa2twQW9ucVZIdC9TK1k3VWtlait0UnJ0WFkxeTVqCm9OMndlby9HTW1uY01lQmcrdHJYNDlyUUpuS1RzRSt5a0ZWRHcvZjNZRjg4eU8vM3VYNzhjQXhLTlFiM2NyMkwKZGw5SnJmZktmUGpmTkJtRGdYMnplaGxIb2NPUDAxSlozRzhtZTIxWnlIVFZZVnV5c01qTGhEMVpVOGtKRWs4LwpZdW83Yjdab214VllFZXVRUGc4a1NIVTY4elBEVnFjRFJIMEdlWEpzTVE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    rules:
+      - apiGroups:
+          - "*"
+        apiVersions:
+          - "*"
+        operations:
+          - "CREATE"
+          - "UPDATE"
+        resources:
+          - "pods"
+          - "deployments"
+    namespaceSelector:
+      matchExpressions:
+        # Any Namespace with a label matching the below will have its
+        # annotations validated by this admission controller
+        - key: "enforce-annotations"
+          operator: In
+          values: ["true"]        

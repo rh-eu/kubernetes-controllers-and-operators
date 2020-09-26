@@ -26,6 +26,10 @@ spec:
       containers:
       - name: validation-webhook-example
         image: mifomm/webhook:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8443
+          name: webhook-api
         #command: ["/server"]
         #env:
         #  - name: HOSTNAME
@@ -34,15 +38,27 @@ spec:
         #  [
         #    "-host",
         #    "$(HOSTNAME)",
-        #  ]          
+        #  ]
+        command: ["/server"]
+        args:
+          [
+            "-cert-path",
+            "/certs/tls.crt",
+            "-key-path",
+            "/certs/tls.key",
+          ] 
         resources:
           requests:
             cpu: 25m
             memory: 263M
           limits:
             cpu: 25m
-            memory: 263M        
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8443
-          name: webhook-api
+            memory: 263M
+        volumeMounts:
+          - name: certs
+            mountPath: "/certs"
+            readOnly: true
+      volumes:
+        - name: certs
+          secret:
+            secretName: mifomm-tls-certs       
