@@ -1,6 +1,6 @@
 # kubernetes-controllers-and-operators
 
-Digging deeeper into admit_funcs.go ...
+Digging deeper into admit_funcs.go ...
 
 ```bash
 kind create cluster --name admission-control --config kind/kindv1.19.1.yaml
