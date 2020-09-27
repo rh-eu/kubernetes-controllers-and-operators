@@ -4,14 +4,14 @@ WORKDIR /go/src/github.com/rh-eu/kubernetes-controllers-and-operators
 
 COPY ./certs/ ./certs/.
 COPY go.* ./
+COPY ./pkg ./pkg/.
 COPY main.go .
 
 RUN go build -o server main.go
 
 FROM alpine:3.12
 
-#USER nobody:nobody
-COPY ./certs/ ./certs/.
+USER nobody:nobody
 COPY --from=build /go/src/github.com/rh-eu/kubernetes-controllers-and-operators/server /server
 
 CMD [ "/server" ]
