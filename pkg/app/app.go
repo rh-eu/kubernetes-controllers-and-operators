@@ -1,6 +1,7 @@
 package app
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,14 @@ import (
 	admissioncontrol "github.com/rh-eu/kubernetes-controllers-and-operators/pkg/admission-control"
 	"github.com/rh-eu/kubernetes-controllers-and-operators/pkg/helper"
 )
+
+type conf struct {
+	TLSCertPath string
+	TLSKeyPath  string
+	//HTTPOnly    bool
+	Port string
+	Host string
+}
 
 // App ...
 type App struct {
@@ -44,7 +53,7 @@ func NewApp() *App {
 
 	router.GET("/mytest", helper.MyTestToJulienMiddleware(helper.MyTestHandler()))
 
-	router.GET("/admissioncontrol", helper.MyTestToJulienMiddleware(&admissioncontrol.AdmissionHandler{
+	router.POST("/admission-control/enforce-pod-annotations", helper.MyTestToJulienMiddleware(&admissioncontrol.AdmissionHandler{
 		AdmitFunc: admissioncontrol.EnforcePodAnnotations(
 			[]string{"kube-system"},
 			map[string]func(string) bool{
@@ -58,6 +67,16 @@ func NewApp() *App {
 
 // Run ...
 func (k *App) Run() {
-	log.Printf("app is up and running")
-	log.Fatal(http.ListenAndServe(":5051", k.r))
+
+	// Get config
+	conf := &conf{}
+	flag.StringVar(&conf.TLSCertPath, "cert-path", "./certs/mifomm.validation.svc/cert.pem", "The path to the PEM-encoded TLS certificate")
+	flag.StringVar(&conf.TLSKeyPath, "key-path", "./certs/mifomm.validation.svc/key.pem", "The path to the unencrypted TLS key")
+	//flag.BoolVar(&conf.HTTPOnly, "http-only", false, "Only listen on unencrypted HTTP (e.g. for proxied environments)")
+	flag.StringVar(&conf.Port, "port", ":8443", "The port to listen on (HTTPS).")
+	flag.StringVar(&conf.Host, "host", "admissiond.questionable.services", "The hostname for the service")
+	flag.Parse()
+
+	log.Printf("app is up and running and listening on port %s", conf.Port)
+	log.Fatal(http.ListenAndServeTLS(conf.Port, conf.TLSCertPath, conf.TLSKeyPath, k.r))
 }
