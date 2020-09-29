@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -28,6 +29,17 @@ type AdmissionHandler struct {
 func (ah *AdmissionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("... testing here ...")
+
+	outgoingReview := &admission.AdmissionReview{
+		Response: &admission.AdmissionResponse{},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	res, _ := json.Marshal(outgoingReview)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
 }
 
 // MyTestHandler ...

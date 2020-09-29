@@ -4,11 +4,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"os"
 
-	kitlog "github.com/go-kit/kit/log"
 	"github.com/julienschmidt/httprouter"
-	admissioncontrol "github.com/rh-eu/kubernetes-controllers-and-operators/pkg/admission-control"
+	"github.com/rh-eu/kubernetes-controllers-and-operators/pkg/handler"
 	"github.com/rh-eu/kubernetes-controllers-and-operators/pkg/helper"
 )
 
@@ -35,10 +33,10 @@ func myHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func NewApp() *App {
 
 	// Set up logging
-	var logger kitlog.Logger
-	logger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
-	log.SetOutput(kitlog.NewStdlibAdapter(logger))
-	logger = kitlog.With(logger, "ts", kitlog.DefaultTimestampUTC, "loc", kitlog.DefaultCaller)
+	//var logger kitlog.Logger
+	//logger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
+	//log.SetOutput(kitlog.NewStdlibAdapter(logger))
+	//logger = kitlog.With(logger, "ts", kitlog.DefaultTimestampUTC, "loc", kitlog.DefaultCaller)
 
 	k := &App{
 		r: httprouter.New(),
@@ -53,13 +51,13 @@ func NewApp() *App {
 
 	router.GET("/mytest", helper.MyTestToJulienMiddleware(helper.MyTestHandler()))
 
-	router.POST("/admission-control/enforce-pod-annotations", helper.MyTestToJulienMiddleware(&admissioncontrol.AdmissionHandler{
-		AdmitFunc: admissioncontrol.EnforcePodAnnotations(
+	router.POST("/admission-control/enforce-pod-annotations", helper.MyTestToJulienMiddleware(&handler.AdmissionHandler{
+		AdmitFunc: handler.EnforcePodAnnotations(
 			[]string{"kube-system"},
 			map[string]func(string) bool{
 				"k8s.questionable.services/hostname": func(string) bool { return true },
 			}),
-		Logger: logger,
+		//Logger: logger,
 	}))
 
 	return k
