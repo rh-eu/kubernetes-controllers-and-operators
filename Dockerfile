@@ -4,10 +4,11 @@ WORKDIR /go/src/github.com/rh-eu/kubernetes-controllers-and-operators
 
 COPY ./certs/ ./certs/.
 COPY go.* ./
+COPY ./cmd/ ./cmd/.
 COPY ./pkg ./pkg/.
-COPY main.go .
 
-RUN go build -o server main.go
+
+RUN go build -o server cmd/app/main.go
 
 FROM alpine:3.12
 
