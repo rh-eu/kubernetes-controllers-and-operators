@@ -58,7 +58,7 @@ func MyTestToJulienMiddleware(next http.Handler) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		// do stuff
-		log.Printf("MyTest to Julien ...%v", w)
+		//log.Printf("MyTest to Julien ...%v", w)
 		//w.Write([]byte("Admission Controller!"))
 		next.ServeHTTP(w, r)
 	}

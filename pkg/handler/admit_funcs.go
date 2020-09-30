@@ -5,9 +5,9 @@ import (
 	"log"
 
 	"golang.org/x/xerrors"
-	admission "k8s.io/api/admission/v1beta1"
+	//admission "k8s.io/api/admission/v1beta1"
 
-	//admission "k8s.io/api/admission/v1"
+	admission "k8s.io/api/admission/v1"
 	apps "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
@@ -34,11 +34,15 @@ func newDefaultDenyResponse() *admission.AdmissionResponse {
 func EnforcePodAnnotations(ignoredNamespaces []string, requiredAnnotations map[string]func(string) bool) AdmitFunc {
 	return func(admissionReview *admission.AdmissionReview) (*admission.AdmissionResponse, error) {
 
-		log.Println("... inside AdmitFunc ...")
 		resp := newDefaultDenyResponse()
 
 		kind := admissionReview.Request.Kind.Kind
 		log.Printf("Kind: %+v", kind)
+
+		uid := admissionReview.Request.UID
+		log.Printf("UID: %+v", uid)
+
+		resp.UID = uid
 
 		deserializer := serializer.NewCodecFactory(runtime.NewScheme()).UniversalDeserializer()
 
@@ -47,8 +51,6 @@ func EnforcePodAnnotations(ignoredNamespaces []string, requiredAnnotations map[s
 		var namespace string
 		annotations := make(map[string]string)
 		// Extract the necessary metadata from our known Kinds
-
-		log.Printf("Kind: %+v", kind)
 
 		switch kind {
 		case "Pod":
@@ -110,7 +112,7 @@ func EnforcePodAnnotations(ignoredNamespaces []string, requiredAnnotations map[s
 		}
 
 		missing := make(map[string]string)
-		log.Printf("Missing: %v", missing)
+
 		// We check whether the (strictly matched) annotation key exists, and then run
 		// our user-provided matchFunc against it. If we're missing any keys, or the
 		// value for a key does not match, admission is rejected.
@@ -137,7 +139,6 @@ func EnforcePodAnnotations(ignoredNamespaces []string, requiredAnnotations map[s
 		// No missing or invalid annotations; allow admission
 		resp.Allowed = true
 
-		log.Printf("Response: %+v", resp)
 		return resp, nil
 	}
 }
