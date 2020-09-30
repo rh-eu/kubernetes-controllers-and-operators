@@ -9,12 +9,13 @@ import (
 	"net/http"
 
 	"golang.org/x/xerrors"
-	admission "k8s.io/api/admission/v1beta1"
+	//admission "k8s.io/api/admission/v1beta1"
 
-	//admission "k8s.io/api/admission/v1"
+	admission "k8s.io/api/admission/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // AdmitFunc is a type for building Kubernetes admission webhooks. An AdmitFunc
@@ -42,8 +43,6 @@ type AdmissionHandler struct {
 
 func (ah *AdmissionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	log.Println("... testing here ...")
-
 	if ah.deserializer == nil {
 		runtimeScheme := runtime.NewScheme()
 		ah.deserializer = serializer.NewCodecFactory(runtimeScheme).UniversalDeserializer()
@@ -56,8 +55,6 @@ func (ah *AdmissionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	outgoingReview := &admission.AdmissionReview{
 		Response: &admission.AdmissionResponse{},
 	}
-
-	log.Println("Am I here?")
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := ah.handleAdmissionRequest(w, r); err != nil {
@@ -72,12 +69,15 @@ func (ah *AdmissionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			//	"msg", admissionErr.Message,
 			//	"debug", admissionErr.Debug,
 			//)
+			outgoingReview.APIVersion = "admission.k8s.io/v1"
+			outgoingReview.Kind = "AdmissionReview"
 			outgoingReview.Response.Allowed = admissionErr.Allowed
+			outgoingReview.Response.UID = admissionErr.UID
 		}
 
 		res, err := json.Marshal(outgoingReview)
 		if err != nil {
-			//w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			//ah.Logger.Log(
 			//	"err", err.Error(),
 			//	"msg", "failed to marshal review response",
@@ -87,7 +87,7 @@ func (ah *AdmissionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// the submitted Pods are missing required annotations
-		log.Printf("Is this weird? .... %+v", outgoingReview)
+		log.Printf("%+v", outgoingReview)
 		w.WriteHeader(http.StatusOK)
 		w.Write(res)
 	}
@@ -99,6 +99,7 @@ type AdmissionError struct {
 	Allowed bool
 	Message string
 	Debug   string
+	UID     types.UID
 }
 
 func (e AdmissionError) Error() string {
@@ -108,8 +109,9 @@ func (e AdmissionError) Error() string {
 func (ah *AdmissionHandler) handleAdmissionRequest(w http.ResponseWriter, r *http.Request) error {
 	limitReader := io.LimitReader(r.Body, ah.LimitBytes)
 	body, err := ioutil.ReadAll(limitReader)
+
 	if err != nil {
-		return AdmissionError{false, "could not read the request body", err.Error()}
+		return AdmissionError{false, "could not read the request body", err.Error(), ""}
 	}
 
 	if body == nil || len(body) == 0 {
@@ -117,12 +119,15 @@ func (ah *AdmissionHandler) handleAdmissionRequest(w http.ResponseWriter, r *htt
 			false,
 			"no request body was received",
 			"the request body was nil/len == 0",
+			"",
 		}
 	}
 
 	incomingReview := admission.AdmissionReview{}
+	log.Printf("Incoming Review: %+v", incomingReview)
+
 	if _, _, err := ah.deserializer.Decode(body, nil, &incomingReview); err != nil {
-		return AdmissionError{false, "decoding the review request failed", err.Error()}
+		return AdmissionError{false, "decoding the review request failed", err.Error(), ""}
 	}
 
 	if incomingReview.Request == nil {
@@ -130,29 +135,26 @@ func (ah *AdmissionHandler) handleAdmissionRequest(w http.ResponseWriter, r *htt
 	}
 
 	reviewResponse, err := ah.AdmitFunc(&incomingReview)
+	//log.Printf("Review Response: %+v", reviewResponse)
 	if err != nil {
-		return AdmissionError{false, err.Error(), "the AdmitFunc returned an error"}
+		return AdmissionError{false, err.Error(), "the AdmitFunc returned an error", reviewResponse.UID}
 	}
 
 	if reviewResponse == nil {
-		return AdmissionError{false, "the AdmitFunc returned an empty AdmissionReview", ""}
+		return AdmissionError{false, "the AdmitFunc returned an empty AdmissionReview", "", ""}
 	}
 
 	reviewResponse.UID = incomingReview.Request.UID
-	log.Printf("UID: %v", reviewResponse.UID)
 	review := admission.AdmissionReview{
 		//Request:  incomingReview.Request,
 		Response: reviewResponse,
 	}
 
-	log.Printf("review .... %+v", &review)
-
 	res, err := json.Marshal(&review)
 	if err != nil {
-		return AdmissionError{false, "marshalling the review response failed", err.Error()}
+		return AdmissionError{false, "marshalling the review response failed", err.Error(), ""}
 	}
 
-	log.Printf("result .... %+v", res)
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 
