@@ -150,6 +150,9 @@ func (ah *AdmissionHandler) handleAdmissionRequest(w http.ResponseWriter, r *htt
 		Response: reviewResponse,
 	}
 
+	review.APIVersion = "admission.k8s.io/v1"
+	review.Kind = "AdmissionReview"
+
 	res, err := json.Marshal(&review)
 	if err != nil {
 		return AdmissionError{false, "marshalling the review response failed", err.Error(), ""}
