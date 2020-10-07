@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"golang.org/x/xerrors"
-	//admission "k8s.io/api/admission/v1beta1"
 
 	admission "k8s.io/api/admission/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,6 +41,8 @@ type AdmissionHandler struct {
 }
 
 func (ah *AdmissionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("admission handler ...")
 
 	if ah.deserializer == nil {
 		runtimeScheme := runtime.NewScheme()
@@ -87,7 +88,7 @@ func (ah *AdmissionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// the submitted Pods are missing required annotations
-		log.Printf("%+v", outgoingReview)
+		//log.Printf("Outgoing Review: %+v", outgoingReview)
 		w.WriteHeader(http.StatusOK)
 		w.Write(res)
 	}
@@ -114,6 +115,10 @@ func (ah *AdmissionHandler) handleAdmissionRequest(w http.ResponseWriter, r *htt
 		return AdmissionError{false, "could not read the request body", err.Error(), ""}
 	}
 
+	//log.Println("------------ Begin Body -------------------------")
+	//log.Printf("%s", string(body))
+	//log.Println("------------ End Body --------------------------")
+
 	if body == nil || len(body) == 0 {
 		return AdmissionError{
 			false,
@@ -124,7 +129,7 @@ func (ah *AdmissionHandler) handleAdmissionRequest(w http.ResponseWriter, r *htt
 	}
 
 	incomingReview := admission.AdmissionReview{}
-	log.Printf("Incoming Review: %+v", incomingReview)
+	//log.Printf("Incoming Review: %+v", incomingReview)
 
 	if _, _, err := ah.deserializer.Decode(body, nil, &incomingReview); err != nil {
 		return AdmissionError{false, "decoding the review request failed", err.Error(), ""}
