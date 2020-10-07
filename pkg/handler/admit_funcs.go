@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
 	"golang.org/x/xerrors"
-	//admission "k8s.io/api/admission/v1beta1"
+	"gomodules.xyz/jsonpatch/v2"
 
 	admission "k8s.io/api/admission/v1"
 	apps "k8s.io/api/apps/v1"
@@ -30,9 +31,42 @@ func newDefaultDenyResponse() *admission.AdmissionResponse {
 	}
 }
 
+// MutatingLittleTesting ...
+//func MutatingLittleTesting(ignoredNamespaces []string, requiredAnnotations map[string]func(string) bool) AdmitFunc {
+func MutatingLittleTesting() AdmitFunc {
+	return func(admissionReview *admission.AdmissionReview) (*admission.AdmissionResponse, error) {
+
+		log.Println("MutatingLittleTesting ....")
+
+		//log.Printf("%+v", admissionReview.Request.Object)
+
+		resp := newDefaultDenyResponse()
+
+		kind := admissionReview.Request.Kind.Kind
+		log.Printf("Kind: %+v", kind)
+
+		deserializer := serializer.NewCodecFactory(runtime.NewScheme()).UniversalDeserializer()
+
+		deployment := apps.Deployment{}
+		if _, _, err := deserializer.Decode(admissionReview.Request.Object.Raw, nil, &deployment); err != nil {
+			return nil, err
+		}
+
+		log.Println(deployment.GetManagedFields())
+		//obj, _ := json.Marshal(deployment)
+
+		return resp, nil
+	}
+
+}
+
 // EnforcePodAnnotations ...
 func EnforcePodAnnotations(ignoredNamespaces []string, requiredAnnotations map[string]func(string) bool) AdmitFunc {
 	return func(admissionReview *admission.AdmissionReview) (*admission.AdmissionResponse, error) {
+
+		//log.Println("------Begin Admission Review -------------------")
+		//log.Printf("%+v", admissionReview.Request.Object)
+		//log.Println("------- End Admission Review -------------------")
 
 		resp := newDefaultDenyResponse()
 
@@ -40,7 +74,7 @@ func EnforcePodAnnotations(ignoredNamespaces []string, requiredAnnotations map[s
 		log.Printf("Kind: %+v", kind)
 
 		uid := admissionReview.Request.UID
-		log.Printf("UID: %+v", uid)
+		//log.Printf("UID: %+v", uid)
 
 		resp.UID = uid
 
@@ -64,14 +98,49 @@ func EnforcePodAnnotations(ignoredNamespaces []string, requiredAnnotations map[s
 			annotations = pod.GetAnnotations()
 			log.Printf("Namespace: %s", namespace)
 			log.Printf("Annotations: %v", annotations)
+
 		case "Deployment":
+
+			//object, _ := json.Marshal(admissionReview.Request.Object)
+			//log.Println("--- Begin marshal object")
+			//log.Println(object)
+			//log.Println("--- End marshal object")
+
 			deployment := apps.Deployment{}
 			if _, _, err := deserializer.Decode(admissionReview.Request.Object.Raw, nil, &deployment); err != nil {
 				return nil, err
 			}
 
+			obj, _ := json.Marshal(deployment)
+
+			//log.Println("------ Begin Deploy Object --------")
+			//log.Printf("%+v", deployment)
+			//log.Println("------- End Deploy Object --------")
+
 			deployment.GetNamespace()
 			annotations = deployment.Spec.Template.GetAnnotations()
+			//log.Printf("Annotations: %+v", annotations)
+
+			var userinputmap = make(map[string]string)
+
+			userinputmap["k8s.questionable.services/id"] = "abc"
+			userinputmap["mifomm.eu/name"] = "RH"
+			userinputmap["test.example.com/mifomm"] = "mifomm2020"
+			deployment.Spec.Template.SetAnnotations(userinputmap)
+
+			//log.Printf("Deployment: %+v", deployment)
+
+			objnew, _ := json.Marshal(deployment)
+
+			//var old []byte
+			//var new []byte
+
+			patch, err := jsonpatch.CreatePatch(obj, objnew)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Patch: %+v", patch)
+
 		case "StatefulSet":
 			statefulset := apps.StatefulSet{}
 			if _, _, err := deserializer.Decode(admissionReview.Request.Object.Raw, nil, &statefulset); err != nil {

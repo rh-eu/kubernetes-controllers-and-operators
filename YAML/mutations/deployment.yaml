@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mutation-webhook
+  namespace: mutation
+  labels:
+    app: mutation-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mutation-webhook
+  template:
+    metadata:
+      labels:
+        app: mutation-webhook
+    spec:
+      containers:
+      - name: mutation-webhook-example
+        image: mifomm/webhook:latest
+        resources:
+          requests:
+            cpu: 25m
+            memory: 263M
+          limits:
+            cpu: 25m
+            memory: 263M        
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8443
+          name: webhook-api
+        command: ["/server"]
+        args:
+          [
+            "-cert-path",
+            "/certs/tls.crt",
+            "-key-path",
+            "/certs/tls.key",
+          ]
+        volumeMounts:
+          - name: certs
+            mountPath: "/certs"
+            readOnly: true
+      volumes:
+        - name: certs
+          secret:
+            secretName: mifomm-tls-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mifomm
+  namespace: mutation
+spec:
+  selector:
+    app: mutation-webhook
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: webhook-api                        

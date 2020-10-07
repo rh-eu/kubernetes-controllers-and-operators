@@ -54,6 +54,12 @@ func NewApp() *App {
 
 	router.GET("/mytest", helper.MyTestToJulienMiddleware(helper.MyTestHandler()))
 
+	//router.POST("/mutation", helper.MyTestToJulienMiddleware(helper.MutatingHandler()))
+
+	router.POST("/mutation", helper.MyTestToJulienMiddleware(&handler.AdmissionHandler{
+		AdmitFunc: handler.MutatingLittleTesting(),
+	}))
+
 	router.POST("/admission-control/enforce-pod-annotations", helper.MyTestToJulienMiddleware(&handler.AdmissionHandler{
 		AdmitFunc: handler.EnforcePodAnnotations(
 			[]string{"kube-system"},
@@ -71,8 +77,8 @@ func (k *App) Run() {
 
 	// Get config
 	conf := &conf{}
-	flag.StringVar(&conf.TLSCertPath, "cert-path", "./certs/mifomm.validation.svc/cert.pem", "The path to the PEM-encoded TLS certificate")
-	flag.StringVar(&conf.TLSKeyPath, "key-path", "./certs/mifomm.validation.svc/key.pem", "The path to the unencrypted TLS key")
+	flag.StringVar(&conf.TLSCertPath, "cert-path", "./certs/mifomm.mutation.svc/cert.pem", "The path to the PEM-encoded TLS certificate")
+	flag.StringVar(&conf.TLSKeyPath, "key-path", "./certs/mifomm.mutation.svc/key.pem", "The path to the unencrypted TLS key")
 	//flag.BoolVar(&conf.HTTPOnly, "http-only", false, "Only listen on unencrypted HTTP (e.g. for proxied environments)")
 	flag.StringVar(&conf.Port, "port", ":8443", "The port to listen on (HTTPS).")
 	flag.StringVar(&conf.Host, "host", "admissiond.questionable.services", "The hostname for the service")

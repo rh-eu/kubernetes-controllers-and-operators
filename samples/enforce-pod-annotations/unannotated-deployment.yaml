@@ -14,6 +14,7 @@ spec:
       annotations:
         # invalid annotation
         "k8s.questionable.services/id": "abc"
+        "mifomm.eu/name": "RH"
         # valid annotation
         #"k8s.questionable.services/hostname": "abc.example.com"
       labels:
